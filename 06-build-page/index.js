@@ -9,7 +9,9 @@ const __dirname = path.dirname(__filename)
 const pathToTemplate = path.join(__dirname, 'template.html')
 const pathToDistDir = path.join(__dirname, 'project-dist')
 const pathToIndexFile = path.join(pathToDistDir, 'index.html')
+const pathToStyleFile = path.join(pathToDistDir, 'style.css')
 const pathToComponents = path.join(__dirname, 'components')
+const pathToStylesDir = path.join(__dirname, 'styles')
 
 const createComponent = async () => {
   const rs = createReadStream(pathToTemplate, 'utf8')
@@ -18,8 +20,7 @@ const createComponent = async () => {
     const components = await fs.readdir(pathToComponents, { withFileTypes: true });
 
     components.forEach((component) => {
-
-      if (component.isFile() && path.extname(component.name) === '.html') {
+      if (typeCheck(component) === '.html') {
         const componentRStream = createReadStream(path.join(pathToComponents, component.name), 'utf8')
 
         componentRStream.on('data', (content) => {
@@ -36,5 +37,42 @@ const createComponent = async () => {
 
   rs.on('error', (err) => console.log(err))
 }
+// createComponent()
 
-createComponent()
+const createCss = async () => {
+  try {
+    const ws = createWriteStream(pathToStyleFile)
+    const files = await readdir(pathToStylesDir, { withFileTypes: true })
+
+    files.forEach(async (file) => {
+      if (typeCheck(file) === '.css') {
+        const rs = createReadStream(path.join(pathToStylesDir, file.name))
+        rs.on('data', (data) => ws.write(data))
+        rs.on('error', (error) => console.log(error))
+      }
+    })
+
+  } catch (err) {
+    console.error(err)
+  }
+}
+// createCss()
+
+
+// const buildFn = async () => {
+//   try {
+//     await mkdir(pathToDistDir, { recursive: true })
+//     await createComponent()
+//     await createCss()
+//     await copy(path.join(__dirname, 'assets'), path.join(pathToDistDir, 'assets'))
+//   } catch (err) {
+//     console.error(err)
+//   }
+// }
+// buildFn()
+
+
+// helpers
+function typeCheck(item) {
+  return item.isFile() && path.extname(item.name)
+}
