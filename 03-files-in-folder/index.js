@@ -15,7 +15,7 @@ const pathToFolder = path.join(__dirname, 'secret-folder');
         const name = file.name
         const type = path.extname(name)
         const size = (await fs.stat(path.join(pathToFolder, name))).size
-        console.log(`${name} - ${type} - ${formatBytes(size, 3)}`)
+        console.log(`${name.replace(type, '')} - ${type.replace('.', '')} - ${formatBytes(size, 3)}`)
       }
     })
   } catch (err) {
