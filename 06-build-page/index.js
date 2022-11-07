@@ -12,6 +12,8 @@ const pathToIndexFile = path.join(pathToDistDir, 'index.html')
 const pathToStyleFile = path.join(pathToDistDir, 'style.css')
 const pathToComponents = path.join(__dirname, 'components')
 const pathToStylesDir = path.join(__dirname, 'styles')
+const pathSrc = path.join(__dirname, 'assets')
+const pathTarget = path.join(pathToDistDir, 'assets')
 
 const createComponent = async () => {
   const rs = createReadStream(pathToTemplate, 'utf8')
@@ -42,7 +44,7 @@ const createComponent = async () => {
 const createCss = async () => {
   try {
     const ws = createWriteStream(pathToStyleFile)
-    const files = await readdir(pathToStylesDir, { withFileTypes: true })
+    const files = await fs.readdir(pathToStylesDir, { withFileTypes: true })
 
     files.forEach(async (file) => {
       if (typeCheck(file) === '.css') {
@@ -58,18 +60,34 @@ const createCss = async () => {
 }
 // createCss()
 
+const copy = async () => {
+  try {
+    await fs.mkdir(pathTarget, { recursive: true })
+    const files = await fs.readdir(pathSrc, { withFileTypes: true })
 
-// const buildFn = async () => {
-//   try {
-//     await mkdir(pathToDistDir, { recursive: true })
-//     await createComponent()
-//     await createCss()
-//     await copy(path.join(__dirname, 'assets'), path.join(pathToDistDir, 'assets'))
-//   } catch (err) {
-//     console.error(err)
-//   }
-// }
-// buildFn()
+    files.forEach(async (file) => {
+      if (file.isDirectory()) {
+        await copy(path.join(pathSrc, file.name), path.join(pathTarget, file.name));
+      } else {
+        await fs.copyFile(path.join(pathSrc, path.basename(file.name)), path.join(pathTarget, path.basename(file.name)));
+      }
+    })
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const buildFn = async () => {
+  try {
+    await fs.mkdir(pathToDistDir, { recursive: true })
+    await createComponent()
+    await createCss()
+    await copy()
+  } catch (err) {
+    console.error(err)
+  }
+}
+buildFn()
 
 
 // helpers
