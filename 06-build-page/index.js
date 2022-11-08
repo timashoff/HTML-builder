@@ -6,24 +6,25 @@ import url from 'url'
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const pathToTemplate = path.join(__dirname, 'template.html')
 const pathToDistDir = path.join(__dirname, 'project-dist')
+const pathToStylesDir = path.join(__dirname, 'styles')
+const pathToAssetsDir = path.join(__dirname, 'assets')
+const pathToComponentsDir = path.join(__dirname, 'components')
+const pathToCopyDir = path.join(pathToDistDir, 'assets')
+
+const pathToTemplateFile = path.join(__dirname, 'template.html')
 const pathToIndexFile = path.join(pathToDistDir, 'index.html')
 const pathToStyleFile = path.join(pathToDistDir, 'style.css')
-const pathToComponents = path.join(__dirname, 'components')
-const pathToStylesDir = path.join(__dirname, 'styles')
-const pathSrc = path.join(__dirname, 'assets')
-const pathTarget = path.join(pathToDistDir, 'assets')
 
 const createComponent = async () => {
-  const rs = createReadStream(pathToTemplate, 'utf8')
+  const rs = createReadStream(pathToTemplateFile, 'utf8')
 
   rs.on('data', async (data) => {
-    const components = await fs.readdir(pathToComponents, { withFileTypes: true });
+    const components = await fs.readdir(pathToComponentsDir, { withFileTypes: true });
 
     components.forEach((component) => {
       if (typeCheck(component) === '.html') {
-        const componentRStream = createReadStream(path.join(pathToComponents, component.name), 'utf8')
+        const componentRStream = createReadStream(path.join(pathToComponentsDir, component.name), 'utf8')
 
         componentRStream.on('data', (content) => {
           const componentName = path.basename(component.name, path.extname(component.name))
@@ -39,7 +40,6 @@ const createComponent = async () => {
 
   rs.on('error', (err) => console.log(err))
 }
-// createComponent()
 
 const createCss = async () => {
   try {
@@ -58,18 +58,18 @@ const createCss = async () => {
     console.error(err)
   }
 }
-// createCss()
 
-const copy = async () => {
+
+const copy = async (from, to) => {
   try {
-    await fs.mkdir(pathTarget, { recursive: true })
-    const files = await fs.readdir(pathSrc, { withFileTypes: true })
+    await fs.mkdir(to, { recursive: true })
+    const files = await fs.readdir(from, { withFileTypes: true })
 
     files.forEach(async (file) => {
       if (file.isDirectory()) {
-        await copy(path.join(pathSrc, file.name), path.join(pathTarget, file.name));
+        await copy(path.join(from, file.name), path.join(to, file.name));
       } else {
-        await fs.copyFile(path.join(pathSrc, path.basename(file.name)), path.join(pathTarget, path.basename(file.name)));
+        await fs.copyFile(path.join(from, path.basename(file.name)), path.join(to, path.basename(file.name)))
       }
     })
   } catch (err) {
@@ -82,7 +82,7 @@ const buildFn = async () => {
     await fs.mkdir(pathToDistDir, { recursive: true })
     await createComponent()
     await createCss()
-    await copy()
+    await copy(pathToAssetsDir, pathToCopyDir)
   } catch (err) {
     console.error(err)
   }
