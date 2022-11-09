@@ -1,6 +1,6 @@
-import fs from 'fs/promises'
-import path from 'path'
-import url from 'url'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import url from 'node:url'
 
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -10,6 +10,7 @@ const pathToNewFolder = path.join(__dirname, 'files-copy');
 
 (async () => {
   try {
+    await fs.rm(pathToNewFolder, { force: true, recursive: true })
     await fs.mkdir(pathToNewFolder, { recursive: true })
     const files = await fs.readdir(pathToFolder, { withFileTypes: true })
 
